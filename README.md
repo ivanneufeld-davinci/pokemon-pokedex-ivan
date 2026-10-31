@@ -72,7 +72,7 @@ https://imgur.com/a/mobile-view-2-wefdqbh
 https://imgur.com/a/mobile-view-3-iThTKv5
 
 ## Publicación
-
+Se usó Firebase Hosting para publicar la página.
 - https://pokemon-pokedex-ivan1.web.app/
 
 ## Autoría

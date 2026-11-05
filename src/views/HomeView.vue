@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -35,6 +35,8 @@ const busqueda = ref(typeof route.query.busqueda === 'string' ? route.query.busq
 const tipoSeleccionado = ref(
   typeof route.query.tipo === 'string' && tipos.includes(route.query.tipo) ? route.query.tipo : '',
 )
+
+let temporizadorBusqueda = null
 
 const pokemonesFiltrados = computed(() => {
   return pokemones.value.filter((pokemon) => {
@@ -91,38 +93,60 @@ async function cargarPokemones() {
   } finally {
     cargando.value = false
   }
+}
 
-  watch([busqueda, tipoSeleccionado], ([nuevaBusqueda, nuevoTipo]) => {
+watch(busqueda, () => {
+  clearTimeout(temporizadorBusqueda)
+
+  temporizadorBusqueda = setTimeout(() => {
     const query = {}
 
-    if (nuevaBusqueda) {
-      query.busqueda = nuevaBusqueda
+    if (busqueda.value) {
+      query.busqueda = busqueda.value
     }
 
-    if (nuevoTipo) {
-      query.tipo = nuevoTipo
+    if (tipoSeleccionado.value) {
+      query.tipo = tipoSeleccionado.value
     }
 
     router.replace({ query })
-  })
+  }, 400)
+})
 
-  watch(
-    () => route.query,
-    (query) => {
-      busqueda.value = typeof query.busqueda === 'string' ? query.busqueda : ''
+watch(tipoSeleccionado, () => {
+  const query = {}
 
-      tipoSeleccionado.value =
-        typeof query.tipo === 'string' && tipos.includes(query.tipo) ? query.tipo : ''
-    },
-  )
+  if (busqueda.value) {
+    query.busqueda = busqueda.value
+  }
 
-  watch([busqueda, tipoSeleccionado], () => {
-    paginaActual.value = 1
-  })
-}
+  if (tipoSeleccionado.value) {
+    query.tipo = tipoSeleccionado.value
+  }
+
+  router.replace({ query })
+})
+
+watch(
+  () => route.query,
+  (query) => {
+    busqueda.value = typeof query.busqueda === 'string' ? query.busqueda : ''
+
+    tipoSeleccionado.value =
+      typeof query.tipo === 'string' && tipos.includes(query.tipo) ? query.tipo : ''
+  },
+)
+
+watch([busqueda, tipoSeleccionado], () => {
+  paginaActual.value = 1
+})
 
 const paginaActual = ref(1)
 const pokemonesPorPagina = 12
+
+onUnmounted(() => {
+  clearTimeout(temporizadorBusqueda)
+})
 
 onMounted(cargarPokemones)
 </script>
